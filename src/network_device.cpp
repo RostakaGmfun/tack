@@ -14,7 +14,7 @@
 using namespace tack;
 
 network_device::network_device(std::string name,
-        network_device_type type):
+        network_device_type type, size_t mtu):
         device_name_(name)
 {
     device_fd_ = open("/dev/net/tun", O_RDWR);
@@ -32,19 +32,58 @@ network_device::network_device(std::string name,
             ret = init_tap();
         break;
         default:
+            close(device_fd_);
             throw std::runtime_error("Unknown device type");
     }
 
     if (!ret) {
+        close(device_fd_);
         throw std::runtime_error("Failed to initalize tun/tap device");
     }
 
     type_ = type;
 
+    sock_fd_ = socket(AF_INET, SOCK_DGRAM, 0);
+    if (sock_fd_ < 0) {
+        close(device_fd_);
+        throw std::runtime_error("Failed to open socket: " +
+                std::string(strerror(errno)));
+    }
+
+    if (!set_device_mtu(mtu)) {
+        close(device_fd_);
+        close(sock_fd_);
+        throw std::runtime_error("Failed to set device MTU");
+    }
+
     if (!init_pkb()) {
         close(device_fd_);
+        close(sock_fd_);
         throw std::runtime_error("Failed to initalize packet buffer");
     }
+}
+
+bool network_device::set_device_mtu(size_t mtu)
+{
+    if (!mtu) {
+        return false;
+    }
+
+    ifreq ifr{};
+
+    strncpy(ifr.ifr_name, device_name_.c_str(), sizeof(ifr.ifr_name));
+    ifr.ifr_addr.sa_family = AF_INET;
+    ifr.ifr_mtu = mtu;
+
+    if (ioctl(sock_fd_, SIOCGIFMTU, (void *)&ifr) < 0) {
+        std::cerr << strerror(errno) << std::endl;
+        return false;
+    }
+
+    device_mtu_ = mtu;
+
+    std::cout << "MTU set to " << device_mtu_ << std::endl;
+    return true;
 }
 
 bool network_device::init_tun()
@@ -57,21 +96,13 @@ bool network_device::init_tap()
 {
     ifreq ifr{};
 
-    ifr.ifr_flags |= IFF_TAP|IFF_NO_PI;
-    std::cout << ifr.ifr_mtu << std::endl;
+    ifr.ifr_flags |= IFF_TAP | IFF_NO_PI;
 
-    strncpy(ifr.ifr_name, device_name_.c_str(), IFNAMSIZ);
+    strncpy(ifr.ifr_name, device_name_.c_str(), sizeof(ifr.ifr_name));
 
     if (ioctl(device_fd_, TUNSETIFF, (void *)&ifr) < 0) {
-        close(device_fd_);
         std::cerr << strerror(errno) << std::endl;
         return false;
-    }
-
-    device_mtu_ = ifr.ifr_mtu;
-
-    if (!device_mtu_) {
-        std::cerr << "Invalid MTU=0" << std::endl;
     }
 
     return true;

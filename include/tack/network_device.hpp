@@ -14,12 +14,13 @@ enum class network_device_type {
 class network_device {
 public:
     network_device(std::string name,
-            network_device_type type);
+            network_device_type type, size_t mtu = 1500);
 
     const uint8_t *get_buffer() const { return packet_buffer_; }
     int get_device_fd() const { return device_fd_; }
     network_device_type get_type() const { return type_; }
     size_t get_device_mtu() const { return device_mtu_; }
+    bool set_device_mtu(size_t mtu);
 
 private:
     bool init_tun();
@@ -28,8 +29,9 @@ private:
 
 private:
     int device_fd_;
-    std::string device_name_;
+    int sock_fd_;
     size_t device_mtu_;
+    std::string device_name_;
 
     uint8_t *packet_buffer_;
 
