@@ -3,7 +3,8 @@
 
 #include <cstdint>
 
-namespace tack {
+namespace tack
+{
 
 typedef uint8_t mac_address[6];
 

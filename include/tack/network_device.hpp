@@ -4,7 +4,8 @@
 #include <string>
 #include <vector>
 
-namespace tack {
+namespace tack
+{
 
 enum class network_device_type {
     tun,
