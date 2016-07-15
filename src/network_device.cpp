@@ -88,7 +88,7 @@ bool network_device::set_device_mtu(size_t mtu)
     ifr.ifr_addr.sa_family = AF_INET;
     ifr.ifr_mtu = mtu;
 
-    if (ioctl(sock_fd_, SIOCGIFMTU, (void *)&ifr) < 0) {
+    if (ioctl(sock_fd_, SIOCSIFMTU, (void *)&ifr) < 0) {
         std::cerr << strerror(errno) << std::endl;
         return false;
     }
