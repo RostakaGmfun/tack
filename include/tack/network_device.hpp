@@ -16,6 +16,8 @@ public:
     network_device(std::string name,
             network_device_type type, size_t mtu = 1500);
 
+    ~network_device();
+
     const uint8_t *get_buffer() const { return packet_buffer_; }
     int get_device_fd() const { return device_fd_; }
     network_device_type get_type() const { return type_; }

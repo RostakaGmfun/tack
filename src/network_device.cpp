@@ -63,6 +63,19 @@ network_device::network_device(std::string name,
     }
 }
 
+network_device::~network_device()
+{
+    if (device_fd_) {
+        close(device_fd_);
+    }
+
+    if (sock_fd_) {
+        close(sock_fd_);
+    }
+
+    delete packet_buffer_;
+}
+
 bool network_device::set_device_mtu(size_t mtu)
 {
     if (!mtu) {
