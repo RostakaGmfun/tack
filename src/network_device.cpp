@@ -48,7 +48,6 @@ network_device::~network_device()
 
 void network_device::cleanup()
 {
-
     for (auto fd : device_fds_) {
         if (fd) {
             close(fd);
@@ -85,14 +84,13 @@ bool network_device::set_mtu(size_t mtu)
 
 bool network_device::init_tap(size_t num_devices)
 {
-    int fd = 0;
     ifreq ifr{};
 
     strncpy(ifr.ifr_name, name_.c_str(), sizeof(ifr.ifr_name));
     ifr.ifr_flags |= IFF_TAP | IFF_NO_PI | IFF_MULTI_QUEUE;
 
     for (int i = 0;i<num_devices; i++) {
-        fd = open("/dev/net/tun", O_RDWR);
+        int fd = open("/dev/net/tun", O_RDWR);
         if (fd < 0) {
             std::cerr << strerror(errno) << std::endl;
             return false;
@@ -101,8 +99,15 @@ bool network_device::init_tap(size_t num_devices)
         device_fds_.push_back(fd);
 
         if (ioctl(fd, TUNSETIFF, (void *)&ifr) < 0) {
-            std::cerr << strerror(errno) << std::endl;
-            return false;
+            if (errno == E2BIG) {
+                // The limit of device queue is reached.
+                // Let's report about this but don't fail
+                std::cerr << "Maximum number of devices reached: " << i << std::endl;
+                break;
+            } else {
+                std::cerr << strerror(errno) << std::endl;
+                return false;
+            }
         }
     }
 

@@ -24,7 +24,7 @@ add_custom_target(doc ALL DEPENDS ${DOXYGEN_OUTPUT})
 set(TACK_SOURCES
     src/main.cpp
     src/network_device.cpp
-    src/device_pool.cpp
+    src/ndev_pool.cpp
     )
 
 add_executable(tack ${TACK_SOURCES})
