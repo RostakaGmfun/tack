@@ -15,12 +15,17 @@ public:
     ndev_worker(const ndev_pool *pool,
             int fd, size_t mtu):
         pool_(pool), fd_(fd), mtu_(mtu)
-    { }
+    {
+        packet_buffer_= new uint8_t[mtu_];
+    }
 
     void run()
     {
         while (true) {
-            // TODO
+            if (read(fd_, packet_buffer_, mtu_) < 0) {
+                // TODO
+                continue;
+            }
 
             if (pool_->is_stop()) {
                 return;
@@ -32,6 +37,7 @@ private:
     const ndev_pool *pool_;
     int fd_;
     size_t mtu_;
+    uint8_t *packet_buffer_;
 };
 
 ndev_pool::ndev_pool(const network_device &ndev): stop_(false)
