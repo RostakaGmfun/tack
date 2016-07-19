@@ -21,10 +21,13 @@ endif (DOXYGEN_FOUND)
 
 add_custom_target(doc ALL DEPENDS ${DOXYGEN_OUTPUT})
 
+set(CMAKE_CXX_FLAGS "${CMAKE_CXX_FLAGS} -Wall -Werror -Wextra")
+
 set(TACK_SOURCES
     src/main.cpp
     src/network_device.cpp
     src/ndev_pool.cpp
+    src/ethernet.cpp
     )
 
 add_executable(tack ${TACK_SOURCES})

@@ -65,7 +65,7 @@ bool network_device::set_mtu(size_t mtu)
         return false;
     }
 
-    ifreq ifr{};
+    ifreq ifr;
 
     strncpy(ifr.ifr_name, name_.c_str(), sizeof(ifr.ifr_name));
     ifr.ifr_addr.sa_family = AF_INET;
@@ -84,12 +84,12 @@ bool network_device::set_mtu(size_t mtu)
 
 bool network_device::init_tap(size_t num_devices)
 {
-    ifreq ifr{};
+    ifreq ifr;
 
     strncpy(ifr.ifr_name, name_.c_str(), sizeof(ifr.ifr_name));
     ifr.ifr_flags |= IFF_TAP | IFF_NO_PI | IFF_MULTI_QUEUE;
 
-    for (int i = 0;i<num_devices; i++) {
+    for (size_t i = 0;i<num_devices; i++) {
         int fd = open("/dev/net/tun", O_RDWR);
         if (fd < 0) {
             std::cerr << strerror(errno) << std::endl;

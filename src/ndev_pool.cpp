@@ -1,5 +1,6 @@
 #include "tack/ndev_pool.hpp"
 #include "tack/network_device.hpp"
+#include "tack/ethernet.hpp"
 
 #include <unistd.h>
 
@@ -14,7 +15,8 @@ class ndev_worker
 public:
     ndev_worker(const ndev_pool *pool,
             int fd, size_t mtu):
-        pool_(pool), fd_(fd), mtu_(mtu)
+        pool_(pool), fd_(fd), mtu_(mtu),
+        ethernet_(mtu)
     {
         packet_buffer_= new uint8_t[mtu_];
     }
@@ -27,6 +29,8 @@ public:
                 continue;
             }
 
+            ethernet_.process_packet(packet_buffer_);
+
             if (pool_->is_stop()) {
                 return;
             }
@@ -38,11 +42,12 @@ private:
     int fd_;
     size_t mtu_;
     uint8_t *packet_buffer_;
+    ethernet ethernet_;
 };
 
 ndev_pool::ndev_pool(const network_device &ndev): stop_(false)
 {
-    for (int i = 0;i<ndev.get_num_devices();i++) {
+    for (size_t i = 0;i<ndev.get_num_devices();i++) {
         threads_.push_back(
                 std::thread([this, &ndev, i] {
                     int fd = ndev.get_device_fd(i);

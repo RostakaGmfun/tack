@@ -2,25 +2,32 @@
 #define ETHERNET_HPP
 
 #include <cstdint>
+#include <cstddef>
 
 namespace tack
 {
 
-typedef uint8_t mac_address[6];
+enum ethertype: uint16_t {
+    IPv4 = 0x800,
+    IPv6 = 0x86DD,
+    ARP = 0x806
+};
 
 struct ethernet_header {
-    mac_address dest;
-    mac_address src;
-    uint16_t type;
-    uint8_t *payload;
+    uint8_t dest[6];
+    uint8_t src[6];
+    ethertype type;
 } __attribute__((packed));
 
 class ethernet {
 public:
-    ethernet() = default;
+    ethernet(size_t mtu = 1500);
+    ~ethernet() = default;
 
-    void process_packet(const uint8_t *payload,
-            size_t payload_size);
+    void process_packet(const uint8_t *payload);
+
+private:
+    size_t mtu_;
 };
 
 } // namespace tack

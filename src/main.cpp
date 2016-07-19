@@ -7,6 +7,7 @@
 
 void sigint_handler(int sig)
 {
+    static_cast<void>(sig);
     // This should flush and close all opened fds
     exit(0);
 }
