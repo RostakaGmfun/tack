@@ -28,6 +28,7 @@ set(TACK_SOURCES
     src/network_device.cpp
     src/ndev_pool.cpp
     src/ethernet.cpp
+    src/arp.cpp
     )
 
 add_executable(tack ${TACK_SOURCES})
