@@ -29,6 +29,7 @@ set(TACK_SOURCES
     src/ndev_pool.cpp
     src/ethernet.cpp
     src/arp.cpp
+    src/arp_cache.cpp
     )
 
 add_executable(tack ${TACK_SOURCES})
