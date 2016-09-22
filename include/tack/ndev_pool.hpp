@@ -4,11 +4,15 @@
 #include <cstddef>
 #include <vector>
 #include <thread>
+#include <memory>
 
 #include "tack/network_device.hpp"
 
 namespace tack
 {
+
+class arp_cache;
+using arp_cache_ptr = std::shared_ptr<arp_cache>;
 
 class ndev_pool
 {
@@ -21,6 +25,7 @@ public:
 private:
     std::vector<std::thread> threads_;
     bool stop_;
+    arp_cache_ptr arp_cache_;
 };
 
 } // namespace tack

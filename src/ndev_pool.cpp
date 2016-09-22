@@ -1,11 +1,12 @@
+#include <unistd.h>
+#include <stdexcept>
+#include <cstddef>
+#include <iostream>
+
 #include "tack/ndev_pool.hpp"
 #include "tack/network_device.hpp"
 #include "tack/ethernet.hpp"
-
-#include <unistd.h>
-
-#include <stdexcept>
-#include <cstddef>
+#include "tack/arp_cache.hpp"
 
 namespace tack
 {
@@ -45,7 +46,9 @@ private:
     ethernet ethernet_;
 };
 
-ndev_pool::ndev_pool(const network_device &ndev): stop_(false)
+ndev_pool::ndev_pool(const network_device &ndev):
+    stop_(false),
+    arp_cache_(std::make_shared<arp_cache>())
 {
     for (size_t i = 0;i<ndev.get_num_devices();i++) {
         threads_.push_back(
