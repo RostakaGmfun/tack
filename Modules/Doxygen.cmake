@@ -9,9 +9,8 @@ if (DOXYGEN_FOUND)
         WORKING_DIRECTORY ${CMAKE_CURRENT_SOURCE_DIR}
         DEPENDS ${DOXYGEN_INPUT}
     )
+
+    add_custom_target(doc ALL DEPENDS ${DOXYGEN_OUTPUT})
 else ()
     message(WARNING "Doxygen not found, documentation can not be generated")
 endif (DOXYGEN_FOUND)
-
-add_custom_target(doc ALL DEPENDS ${DOXYGEN_OUTPUT})
-

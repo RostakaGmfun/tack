@@ -18,11 +18,11 @@ set(TACK_SOURCES
 
 add_library(tack ${TACK_SOURCES})
 target_include_directories(tack PUBLIC
-    ${CMAKE_CURRENT_LIST_DIR}/include)
+    ${CMAKE_CURRENT_LIST_DIR}/include
+    ${CMAKE_CURRENT_LIST_DIR}/Catch/single_include)
 target_link_libraries(tack pthread)
 
 add_executable(tackdev src/main.cpp)
 target_link_libraries(tackdev tack)
-
 
 add_subdirectory(test)
