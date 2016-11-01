@@ -2,6 +2,7 @@
 #include <stdexcept>
 #include <cstddef>
 #include <iostream>
+#include <vector>
 
 #include "tack/ndev_pool.hpp"
 #include "tack/network_device.hpp"
@@ -14,19 +15,19 @@ namespace tack
 class ndev_worker
 {
 public:
-    ndev_worker(const ndev_pool *pool,
+    ndev_worker(const ndev_pool &pool,
             int fd, size_t mtu):
         pool_(pool), fd_(fd), mtu_(mtu),
         ethernet_(mtu)
     {
-        packet_buffer_= new uint8_t[mtu_];
+        packet_buffer_.resize(mtu_);
     }
 
     void run()
     {
-        while (true) {
+        while (!pool_.is_stop()) {
             ssize_t r = 0;
-            r = read(fd_, packet_buffer_, mtu_);
+            r = read(fd_, &packet_buffer_[0], mtu_);
             std::cout << "size " << r << std::endl;
             if (r < 0) {
                 // TODO
@@ -34,18 +35,14 @@ public:
             }
 
             ethernet_.process_packet(packet_buffer_);
-
-            if (pool_->is_stop()) {
-                return;
-            }
         }
     }
 
 private:
-    const ndev_pool *pool_;
+    const ndev_pool &pool_;
     int fd_;
     size_t mtu_;
-    uint8_t *packet_buffer_;
+    std::vector<uint8_t> packet_buffer_;
     ethernet ethernet_;
 };
 
@@ -59,7 +56,7 @@ ndev_pool::ndev_pool(const network_device &ndev):
                     int fd = ndev.get_device_fd(i);
                     size_t mtu = ndev.get_mtu();
 
-                    ndev_worker worker(this, fd, mtu);
+                    ndev_worker worker(*this, fd, mtu);
                     worker.run();
                 }));
     }

@@ -26,7 +26,7 @@ public:
     ethernet(size_t mtu = 1500);
     ~ethernet() = default;
 
-    void process_packet(const uint8_t *payload);
+    void process_packet(const std::vector<uint8_t> &payload);
 
 private:
     size_t mtu_;
