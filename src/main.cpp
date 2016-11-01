@@ -20,12 +20,12 @@ int main()
     try {
         tack::network_device ndev("tack0", num_threads > 1 ? num_threads-1 : 1);
         tack::ndev_pool pool(ndev);
+        while (true) {
+            // TODO
+        }
+        return 0;
     } catch (std::runtime_error &e) {
         std::cout << e.what() << std::endl;
         return 1;
     }
-    while (true) {
-        // TODO
-    }
-    return 0;
 }

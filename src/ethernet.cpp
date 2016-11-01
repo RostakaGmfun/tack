@@ -1,4 +1,6 @@
 #include "tack/ethernet.hpp"
+#include "tack/arp.hpp"
+#include "tack/arp_cache.hpp"
 
 #include <iostream>
 #include <stdexcept>
@@ -23,6 +25,17 @@ void ethernet::process_packet(const uint8_t *payload)
     }
 
     const ethernet_header *hdr = reinterpret_cast<const ethernet_header *>(payload);
+
+    std::cout << "src: ";
+    for (auto b : hdr->src) {
+        std::cerr  << std::hex << (int)b << ' ';
+    }
+    std::cout << "\ndst: ";
+    for (auto b : hdr->dest) {
+        std::cerr << std::hex << (int)b << ' ';
+    }
+
+    std::cout << '\n';
 
     switch (ntohs(hdr->type)) {
         case IPv4:

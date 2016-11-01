@@ -4,6 +4,8 @@
 #include <cstdint>
 #include <cstddef>
 
+#include "arp.hpp"
+
 namespace tack
 {
 
@@ -28,6 +30,7 @@ public:
 
 private:
     size_t mtu_;
+//    arp arp_;
 };
 
 } // namespace tack

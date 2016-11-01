@@ -25,7 +25,10 @@ public:
     void run()
     {
         while (true) {
-            if (read(fd_, packet_buffer_, mtu_) < 0) {
+            ssize_t r = 0;
+            r = read(fd_, packet_buffer_, mtu_);
+            std::cout << "size " << r << std::endl;
+            if (r < 0) {
                 // TODO
                 continue;
             }

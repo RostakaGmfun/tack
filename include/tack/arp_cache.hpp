@@ -38,10 +38,12 @@ public:
      * Retrieve IPv4 address by a hardware (MAC) address.
      */
     arp_result<ipv4_address> operator[](const hw_address &from);
+
     /**
      * Retrieve hardware (MAC) address by IPV4 address.
      */
     arp_result<hw_address> operator[](const ipv4_address &from);
+
     /**
      * Update the cache with address pair.
      */
