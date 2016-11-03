@@ -14,8 +14,10 @@ using arp_cache_ptr = std::shared_ptr<arp_cache>;
 
 enum class hrd_type: uint16_t
 {
-    ETHERNET = 1,
+    ethernet = 1,
 };
+
+using pro_type = ethertype;
 
 enum class op_type: uint16_t
 {
@@ -28,7 +30,7 @@ enum class op_type: uint16_t
 struct arp_header
 {
     hrd_type hrd;
-    ethertype pro;
+    pro_type pro;
     uint8_t hln;
     uint8_t pln;
     op_type op;

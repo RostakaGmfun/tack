@@ -12,7 +12,7 @@ namespace tack
 class arp;
 using arp_ptr = std::shared_ptr<arp>;
 
-enum ethertype: uint16_t {
+enum class ethertype: uint16_t {
     IPv4 = 0x800,
     IPv6 = 0x86DD,
     ARP = 0x806
