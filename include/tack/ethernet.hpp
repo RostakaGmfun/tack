@@ -3,11 +3,14 @@
 
 #include <cstdint>
 #include <cstddef>
-
-#include "arp.hpp"
+#include <memory>
+#include <vector>
 
 namespace tack
 {
+
+class arp;
+using arp_ptr = std::shared_ptr<arp>;
 
 enum ethertype: uint16_t {
     IPv4 = 0x800,
@@ -30,7 +33,7 @@ public:
 
 private:
     size_t mtu_;
-//    arp arp_;
+    arp_ptr arp_;
 };
 
 } // namespace tack
