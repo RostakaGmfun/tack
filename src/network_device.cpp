@@ -96,8 +96,6 @@ bool network_device::init_tap(size_t num_devices)
             return false;
         }
 
-        device_fds_.push_back(fd);
-
         if (ioctl(fd, TUNSETIFF, (void *)&ifr) < 0) {
             if (errno == E2BIG) {
                 // The limit of device queue is reached.
@@ -109,6 +107,7 @@ bool network_device::init_tap(size_t num_devices)
                 return false;
             }
         }
+        device_fds_.push_back(fd);
     }
 
     return true;
