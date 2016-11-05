@@ -3,43 +3,65 @@
 
 #include <cstdint>
 #include <cstddef>
+#include <tuple>
+#include <list>
+#include <typeindex>
 
 namespace tack {
 
 /**
  * Socket buffer implementation.
  *
- * @tparam E Enumeration type used to identify protocol headers present in the buffer
- * @tparam N Total size of buffer.
+ * Internal structure:
+ *
+ * buffer_          +-------------------+
+ * head_            |____free space_____|
+ *                  |______header_0_____|
+ *                  |________...________|
+ * payload_         |_____data start____|
+ *                  |________...________|
+ * end_             |______data end_____|
+ * buffer_+size_    |_____free space____|
  */
-template <class E, size_t N>
 class sockbuf
 {
 public:
     /**
-     * @param mtu Used to deal with fragmentation and read size of Ethernet frames.
+     * @param size Total size of buffer
+     * @param header_len Maximum total size of protocol headers in bytes.
      */
-    sockbuf(size_t mtu);
+    sockbuf(size_t size, size_t header_len);
 
     // TODO: consider implementing these
     sockbuf(const sockbuf &other) = delete;
     sockbuf(sockbuf &&rval) = delete;
     sockbuf &operator=(const sockbuf &other) = delete;
 
-    ~sockbuf() = default;
+    ~sockbuf();
 
     /**
-     * Adds protocol header to the buffer.
+     * Wraps buffer contents (payload + protocol headers) with another header.
      *
      * @param header Header data to put into the buffer.
-     * @param size   Size of header data.
-     * @param type   Unique type identifier of header.
      *
      * @return Success/failure.
      *
-     * @note This might fail because of insufficient space in buffer.
+     * @note This might fail because of insufficient space in buffer
+     * or in case the header with given type is already present in buffer.
      */
-    bool wrap(const uint8_t *header, size_t size, E type);
+    template <class HeaderType>
+    bool wrap(const HeaderType *header);
+
+    /**
+     * Places header identifier at the end of header section.
+     * This is used during packet parsing.
+     *
+     * @retval true Header successfully placed.
+     * @retval false Insufficient space in buffer or
+     * header with given type already exists.
+     */
+    template <class HeaderType>
+    bool push_header();
 
     /**
      * Returns current number of protocol headers present in buffer.
@@ -49,28 +71,19 @@ public:
     /**
      * Returns const pointer to header of given type.
      *
-     * @param type Type of header.
+     * @tparam HeaderType Type of header.
      *
      * @retval Pointer to start of header.
-     * @retval 0 if header of given type is not present in buffer.
+     * @retval nullptr if header of given type is not present in buffer.
      */
-    const uint8_t *get_header(E type) const;
+    template <class HeaderType>
+    const HeaderType *get_header() const;
 
     /**
      * Non-const version of get_header().
-     * @see get_header().
      */
-    uint8_t *get_header(E type);
-
-    /**
-     * Returns size of header of given type.
-     *
-     * @param type Type of header.
-     *
-     * @retval Size of header.
-     * @retval 0 if header of given type is not present in buffer.
-     */
-    size_t get_header_size(E type) const;
+    template <class HeaderType>
+    HeaderType *get_header();
 
     /**
      * Appends given payload to the end of payload section.
@@ -90,6 +103,11 @@ public:
     const uint8_t *payload() const;
 
     /**
+     * Non-const version of payload().
+     */
+    uint8_t *payload();
+
+    /**
      * Returns size of payload in bytes, excluding size of protocol headers.
      */
     size_t payload_size() const;
@@ -106,11 +124,9 @@ public:
     uint8_t *raw();
 
     /**
-     * Returns size of entire buffer.
-     *
-     * @note Equals to N template parameter.
+     * Returns size of data in buffer.
      */
-    constexpr size_t raw_size() const;
+    size_t raw_size() const;
 
     /**
      * Clears payload section of buffer.
@@ -123,27 +139,130 @@ public:
     void clear_all();
 
     /**
-     * Writes (Ethernet) frame to given decriptor.
+     * Writes data using Writer interface.
      *
-     * @param fd Descriptor to write to.
+     * @tparam Writer Writer object type.
+     * @param writer Writer object.
      *
      * @return Number of bytes writen.
-     *
-     * @note Payload is fragmented into MTU-sized parts.
      */
-    int64_t write(int fd);
+    template <class Writer>
+    int64_t write(Writer &writer);
 
     /**
-     * Reads frame from given descriptor.
+     * Reads data using Reader interface.
      *
-     * @param fd Descriptor to read from.
+     * @tparam Reader Reader object type.
+     * @param reader Reader object.
      *
      * @return Number of bytes read.
      *
-     * @note Completely discards previous contents of buffer.
+     * @note Completely discards previous contents of buffer,
+     * regardless of success of opeartion.
      */
-    int64_t read(int fd);
+    template <class Reader>
+    int64_t read(Reader &reader);
+
+private:
+    uint8_t *buffer_;
+
+    size_t size_;
+    size_t header_len_;
+
+    using header_id = std::tuple<std::type_index, uint8_t *, size_t>;
+    std::list<header_id> headers_;
+
+    uint8_t *head_;
+    uint8_t *payload_;
+    uint8_t *end_;
+    uint8_t *frag_;
 };
+
+template <class HeaderType>
+bool sockbuf::wrap(const HeaderType *header)
+{
+    if (header == nullptr) {
+        return false;
+    }
+
+    for (const auto &i : headers_) {
+        if (std::get<0>(i) == std::type_index(typeid(HeaderType))) {
+            return false; // header with given type already exists
+        }
+    }
+
+    if (sizeof(HeaderType) > head_ - buffer_) {
+        return false; // not enough space in buffer
+    }
+
+    head_ -= sizeof(HeaderType);
+    auto hdr_id = std::make_tuple(typeid(HeaderType), head_, sizeof(HeaderType));
+    headers_.push_front(hdr_id);
+    std::copy(header, header + 1, static_cast<HeaderType*>(head_));
+
+    return true;
+}
+
+template <class HeaderType>
+bool sockbuf::push_header()
+{
+    for (const auto &i : headers_) {
+        if (std::get<0>(i) == std::type_index(typeid(HeaderType))) {
+            return false; // header with given type already exists
+        }
+    }
+
+    if (static_cast<ptrdiff_t>(sizeof(HeaderType)) > buffer_ + size_ - payload_) {
+        return false; // not enough space in "head room"
+    }
+
+    auto hdr = std::make_tuple(std::type_index(typeid(HeaderType)), payload_,
+            sizeof(HeaderType));
+    headers_.push_back(hdr);
+
+    payload_ += sizeof(HeaderType);
+    return true;
+}
+
+template <class HeaderType>
+const HeaderType *sockbuf::get_header() const
+{
+    return const_cast<sockbuf *>(this)->get_header<HeaderType>();
+}
+
+
+template <class HeaderType>
+HeaderType *sockbuf::get_header()
+{
+    for (auto &i : headers_) {
+        if (std::type_index(typeid(HeaderType)) == std::get<0>(i)) {
+            return reinterpret_cast<HeaderType *>(std::get<1>(i));
+        }
+    }
+    return nullptr;
+}
+
+template <class Writer>
+int64_t sockbuf::write(Writer &writer)
+{
+    return writer.write(head_, end_ - head_);
+}
+
+template <class Reader>
+int64_t sockbuf::read(Reader &reader)
+{
+    clear_all();
+    int64_t ret = reader.read(buffer_, size_);
+    if (ret <= 0) {
+        return ret;
+    }
+
+    end_ = buffer_ + ret;
+    payload_ = buffer_;
+    head_ = buffer_;
+
+    return ret;
+}
 
 } // namespace tack
 

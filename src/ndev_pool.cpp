@@ -8,6 +8,7 @@
 #include "tack/network_device.hpp"
 #include "tack/ethernet.hpp"
 #include "tack/arp_cache.hpp"
+#include "tack/sockbuf.hpp"
 
 namespace tack
 {
@@ -19,22 +20,14 @@ public:
             int fd, size_t mtu):
         pool_(pool), fd_(fd), mtu_(mtu),
         ethernet_(mtu)
-    {
-        packet_buffer_.resize(mtu_);
-    }
+    {}
 
     void run()
     {
+        // TODO: sockbuf size configuration instead of meaningless values
+        sockbuf skb(1024, 256);
         while (!pool_.is_stop()) {
-            ssize_t r = 0;
-            r = read(fd_, &packet_buffer_[0], mtu_);
-            std::cout << "size " << r << std::endl;
-            if (r < 0) {
-                // TODO
-                continue;
-            }
-
-            ethernet_.process_packet(packet_buffer_);
+            ethernet_.process_packet(skb);
         }
     }
 
@@ -42,7 +35,6 @@ private:
     const ndev_pool &pool_;
     int fd_;
     size_t mtu_;
-    std::vector<uint8_t> packet_buffer_;
     ethernet ethernet_;
 };
 

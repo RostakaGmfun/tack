@@ -4,7 +4,8 @@
 #include <cstdint>
 #include <cstddef>
 #include <memory>
-#include <vector>
+
+#include  "tack/sockbuf.hpp"
 
 namespace tack
 {
@@ -29,7 +30,7 @@ public:
     ethernet(size_t mtu = 1500);
     ~ethernet() = default;
 
-    void process_packet(const std::vector<uint8_t> &payload);
+    void process_packet(sockbuf &sockbuf);
 
 private:
     size_t mtu_;

@@ -14,7 +14,8 @@ set(TACK_SOURCES
     src/ndev_pool.cpp
     src/ethernet.cpp
     src/arp.cpp
-    src/arp_cache.cpp)
+    src/arp_cache.cpp
+    src/sockbuf.cpp)
 
 add_library(tack ${TACK_SOURCES})
 target_include_directories(tack PUBLIC

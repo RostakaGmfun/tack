@@ -1,4 +1,7 @@
-add_executable(tack_test main.cpp arp_cache_test.cpp)
+add_executable(tack_test
+    main.cpp
+    arp_cache_test.cpp
+    sockbuf_test.cpp)
 
 target_link_libraries(tack_test tack)
 

@@ -16,20 +16,12 @@ ethernet::ethernet(size_t mtu):
     }
 }
 
-void ethernet::process_packet(const std::vector<uint8_t> &payload)
+void ethernet::process_packet(sockbuf &skb)
 {
-    // Sometimes Ethernet frames are prepended with a bunch of 0 bytes.
-    // Currently I don't get why this happens,
-    // but this li'l hack make things happen the way I like them
-    auto it = payload.begin();
-    while (!*it) {
-        it++;
-        if (static_cast<size_t>(std::distance(it, payload.end())) < sizeof(ethernet_header)) {
-            // Looks like we've read all zeroes
-            return;
-        }
+    if (!skb.push_header<ethernet_header>()) {
+        return;
     }
-    const ethernet_header *hdr = reinterpret_cast<const ethernet_header *>(&*it);
+    const ethernet_header *hdr = skb.get_header<ethernet_header>();
 
     std::cout << "src: ";
     for (auto b : hdr->src) {
