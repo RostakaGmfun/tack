@@ -89,6 +89,7 @@ TEST_CASE( "sockbuf_test", "[sockbuf]")
 
         REQUIRE(skb.push_header<proto_1>() == true);
         REQUIRE(skb.payload() == skb.raw() + sizeof(proto_0) + sizeof(proto_1));
+        REQUIRE(skb.payload_size() == sizeof(payload_t));
         REQUIRE(reinterpret_cast<uint8_t*>(skb.get_header<proto_1>()) == skb.raw() + sizeof(proto_0));
         REQUIRE(skb.num_headers() == 2);
     }

@@ -6,6 +6,7 @@
 #include <memory>
 
 #include "tack/ethernet.hpp"
+#include "tack/sockbuf.hpp"
 
 namespace tack {
 
@@ -22,9 +23,7 @@ using pro_type = ethertype;
 enum class op_type: uint16_t
 {
     arp_request = 1,
-    arp_reply = 2,
-    rarp_request = 3,
-    rarp_reply = 4
+    arp_reply = 2
 };
 
 struct arp_header
@@ -42,7 +41,7 @@ public:
     arp(arp_cache_ptr cache);
     ~arp() = default;
 
-    void process_packet(const std::vector<uint8_t> &payload);
+    void process_packet(sockbuf &skb);
 
 private:
     arp_cache_ptr arp_cache_;

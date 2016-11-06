@@ -202,8 +202,8 @@ bool sockbuf::wrap(const HeaderType *header)
     }
 
     head_ -= sizeof(HeaderType);
-    auto hdr_id = std::make_tuple(std::type_index(typeid(HeaderType)), head_, sizeof(HeaderType));
-    headers_.push_front(hdr_id);
+    headers_.emplace_front(std::make_tuple(std::type_index(typeid(HeaderType)),
+                head_, sizeof(HeaderType)));
     std::copy(header, header + 1, reinterpret_cast<HeaderType*>(head_));
 
     return true;
@@ -222,9 +222,8 @@ bool sockbuf::push_header()
         return false; // not enough space in "head room"
     }
 
-    auto hdr = std::make_tuple(std::type_index(typeid(HeaderType)), payload_,
-            sizeof(HeaderType));
-    headers_.push_back(hdr);
+    headers_.emplace_back(std::make_tuple(std::type_index(typeid(HeaderType)), payload_,
+            sizeof(HeaderType)));
 
     payload_ += sizeof(HeaderType);
     return true;

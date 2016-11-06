@@ -23,7 +23,7 @@ void ethernet::process_packet(sockbuf &skb)
     }
     const ethernet_header *hdr = skb.get_header<ethernet_header>();
 
-    std::cout << "src: ";
+    /*std::cout << "src: ";
     for (auto b : hdr->src) {
         std::cerr  << std::hex << (int)b << ' ';
     }
@@ -32,20 +32,19 @@ void ethernet::process_packet(sockbuf &skb)
         std::cerr << std::hex << (int)b << ' ';
     }
 
-    std::cout << '\n';
+    std::cout << '\n';*/
 
     switch (tack::ntohs(hdr->type)) {
         case ethertype::IPv4:
             // TODO
-            std::cout << "IPv4" << std::endl;
+            //std::cout << "IPv4" << std::endl;
         break;
         case ethertype::IPv6:
             // TODO
-            std::cout << "IPv6" << std::endl;
+            //std::cout << "IPv6" << std::endl;
         break;
         case ethertype::ARP:
-            // TODO
-            std::cout << "ARP" << std::endl;
+            arp_->process_packet(skb);
         break;
         default:
             std::cerr << std::hex << static_cast<uint16_t>(tack::ntohs((hdr->type))) << std::endl;
