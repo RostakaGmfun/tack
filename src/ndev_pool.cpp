@@ -25,11 +25,35 @@ public:
     void run()
     {
         // TODO: sockbuf size configuration instead of meaningless values
-        sockbuf skb(1024, 256);
+        sockbuf skb(mtu_, 256);
         while (!pool_.is_stop()) {
-            ethernet_.process_packet(skb);
+            if (skb.read(*this) > 0) {
+                ethernet_.process_packet(skb);
+            }
         }
     }
+
+    int64_t read(uint8_t *dest, size_t max_size)
+    {
+        if (dest == nullptr || max_size < mtu_) {
+            return -1;
+        }
+
+        // Sometimes Ethernet frames are prepended with bunch bytes equal to zero.
+        // Currently I don't get why this happens,
+        // but this li'l hack make things happen the way I like them
+        ssize_t r = ::read(fd_, dest, mtu_);
+        if (r < 0) {
+            return r;
+        }
+        for(uint8_t *p = dest; p != dest+ r; p++) {
+            if (*p !=0) {
+                return std::copy(p, dest + r, dest) - dest;
+            }
+        }
+        return -1;
+    }
+
 
 private:
     const ndev_pool &pool_;

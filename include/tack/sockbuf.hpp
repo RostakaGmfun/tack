@@ -134,9 +134,16 @@ public:
     void clear_payload();
 
     /**
-     * Clears entire buffer.
+     * Clears contents and eserves headers_len bytes
+     * for protocol headers in buffer.
+     *
+     * @param headers_len Number of bytes to reserve.
+     *
+     * @retval true If successfully cleared and reserved.
+     * @retval false If headers_len is greater than total size of buffer.
+     *
      */
-    void clear_all();
+    bool clear_all(size_t headers_len);
 
     /**
      * Writes data using Writer interface.
@@ -250,15 +257,13 @@ int64_t sockbuf::write(Writer &writer)
 template <class Reader>
 int64_t sockbuf::read(Reader &reader)
 {
-    clear_all();
+    clear_all(0);
     int64_t ret = reader.read(buffer_, size_);
     if (ret <= 0) {
         return ret;
     }
 
-    end_ = buffer_ + ret;
-    payload_ = buffer_;
-    head_ = buffer_;
+    end_ += ret;
 
     return ret;
 }

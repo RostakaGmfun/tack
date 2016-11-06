@@ -5,13 +5,13 @@
 namespace tack {
 
 sockbuf::sockbuf(size_t size, size_t header_len):
-    size_(size), header_len_(header_len)
+    size_(size)
 {
     if (header_len >= size) {
         throw std::runtime_error("header_len >= size");
     }
     buffer_ = new uint8_t[size_];
-    clear_all();
+    clear_all(header_len);
 }
 
 sockbuf::~sockbuf()
@@ -76,11 +76,19 @@ void sockbuf::clear_payload()
     end_ = payload_;
 }
 
-void sockbuf::clear_all()
+bool sockbuf::clear_all(size_t header_len)
 {
+    if (header_len > size_) {
+        return false;
+    }
+
+    header_len_ = header_len;
     payload_ = buffer_ + header_len_;
     end_ = payload_;
     head_ = payload_;
+    headers_.clear();
+
+    return true;
 }
 
 }

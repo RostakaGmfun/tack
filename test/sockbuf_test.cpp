@@ -76,9 +76,12 @@ TEST_CASE( "sockbuf_test", "[sockbuf]")
         tack::sockbuf skb(1500, sizeof(p0) + sizeof(p1));
         mock_rw reader;
         size_t real_size = sizeof(p0) + sizeof(p1) + sizeof(payload);
+        p0.data[0] = 42;
         REQUIRE(skb.read(reader) == real_size);
+        REQUIRE(skb.raw() == skb.payload());
 
         REQUIRE(skb.push_header<proto_0>() == true);
+        REQUIRE(skb.get_header<proto_0>()->data[0] == 42);
         REQUIRE(skb.push_header<proto_0>() == false);
         REQUIRE(skb.payload() == skb.raw() + sizeof(proto_0));
         REQUIRE(reinterpret_cast<uint8_t*>(skb.get_header<proto_0>()) == skb.raw());
