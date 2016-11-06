@@ -190,14 +190,14 @@ bool sockbuf::wrap(const HeaderType *header)
         }
     }
 
-    if (sizeof(HeaderType) > head_ - buffer_) {
+    if (static_cast<ptrdiff_t>(sizeof(HeaderType)) > head_ - buffer_) {
         return false; // not enough space in buffer
     }
 
     head_ -= sizeof(HeaderType);
-    auto hdr_id = std::make_tuple(typeid(HeaderType), head_, sizeof(HeaderType));
+    auto hdr_id = std::make_tuple(std::type_index(typeid(HeaderType)), head_, sizeof(HeaderType));
     headers_.push_front(hdr_id);
-    std::copy(header, header + 1, static_cast<HeaderType*>(head_));
+    std::copy(header, header + 1, reinterpret_cast<HeaderType*>(head_));
 
     return true;
 }

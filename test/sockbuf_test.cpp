@@ -18,12 +18,12 @@ static proto_0 p0;
 static proto_1 p1;
 static payload_t payload;
 
-struct mock_reader
+struct mock_rw
 {
     int64_t read(uint8_t *dest, size_t size)
     {
         uint8_t *start = dest;
-        if (size < sizeof(p0) + sizeof(p1) + sizeof(payload)) {
+        if (size < sizeof(p0) + sizeof(p1) + sizeof(payload) || dest == nullptr) {
             return -1;
         }
 
@@ -35,6 +35,14 @@ struct mock_reader
         std::copy(&payload, &payload+1, reinterpret_cast<payload_t*>(dest));
         dest += sizeof(payload);
         return dest - start;
+    }
+
+    int64_t write(uint8_t *src, size_t size)
+    {
+        if (src == nullptr || size == 0) {
+            return -1;
+        }
+        return size;
     }
 };
 
@@ -54,7 +62,7 @@ TEST_CASE( "sockbuf_test", "[sockbuf]")
     SECTION("Read test")
     {
         tack::sockbuf skb(1500, sizeof(p0) + sizeof(p1));
-        mock_reader reader;
+        mock_rw reader;
         size_t real_size = sizeof(p0) + sizeof(p1) + sizeof(payload);
         REQUIRE(skb.read(reader) == real_size);
         REQUIRE(skb.raw_size() == real_size);
@@ -66,12 +74,44 @@ TEST_CASE( "sockbuf_test", "[sockbuf]")
     SECTION("Parsing test")
     {
         tack::sockbuf skb(1500, sizeof(p0) + sizeof(p1));
-        mock_reader reader;
+        mock_rw reader;
         size_t real_size = sizeof(p0) + sizeof(p1) + sizeof(payload);
         REQUIRE(skb.read(reader) == real_size);
-        skb.push_header<proto_0>();
+
+        REQUIRE(skb.push_header<proto_0>() == true);
+        REQUIRE(skb.push_header<proto_0>() == false);
         REQUIRE(skb.payload() == skb.raw() + sizeof(proto_0));
         REQUIRE(reinterpret_cast<uint8_t*>(skb.get_header<proto_0>()) == skb.raw());
         REQUIRE(skb.num_headers() == 1);
+
+        REQUIRE(skb.push_header<proto_1>() == true);
+        REQUIRE(skb.payload() == skb.raw() + sizeof(proto_0) + sizeof(proto_1));
+        REQUIRE(reinterpret_cast<uint8_t*>(skb.get_header<proto_1>()) == skb.raw() + sizeof(proto_0));
+        REQUIRE(skb.num_headers() == 2);
+    }
+
+    SECTION("Serialization test")
+    {
+        tack::sockbuf skb(1500, sizeof(p0) + sizeof(p1));
+        REQUIRE(skb.add_payload(reinterpret_cast<uint8_t*>(&payload),
+                    sizeof(payload)) == true);
+        REQUIRE(skb.raw_size() == sizeof(payload));
+        REQUIRE(skb.payload_size() == sizeof(payload));
+        REQUIRE(skb.payload() == skb.raw());
+
+        p0.data[0] = 42;
+        REQUIRE(skb.wrap(&p0) == true);
+        REQUIRE(reinterpret_cast<uint8_t*>(skb.get_header<proto_0>()) == skb.raw());
+        REQUIRE(skb.num_headers() == 1);
+        REQUIRE(skb.get_header<proto_0>()->data == p0.data);
+
+        p1.data[0] = 13;
+        REQUIRE(skb.wrap(&p1) == true);
+        REQUIRE(reinterpret_cast<uint8_t*>(skb.get_header<proto_1>()) == skb.raw());
+        REQUIRE(reinterpret_cast<uint8_t*>(skb.get_header<proto_0>()) == skb.raw() + sizeof(proto_1));
+        REQUIRE(skb.num_headers() == 2);
+        REQUIRE(skb.get_header<proto_1>()->data == p1.data);
+
+        REQUIRE(skb.raw_size() == sizeof(proto_0) + sizeof(proto_1) + sizeof(payload));
     }
 }

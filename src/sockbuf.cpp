@@ -32,7 +32,7 @@ bool sockbuf::add_payload(const uint8_t *payload, size_t size)
         return false;
     }
 
-    if (buffer_ + size_ - end_ < static_cast<ptrdiff_t>(size)) {
+    if (head_ + size_ - end_ < static_cast<ptrdiff_t>(size)) {
         return false; // not enough space
     }
 
@@ -58,7 +58,7 @@ size_t sockbuf::payload_size() const
 
 uint8_t *sockbuf::raw()
 {
-    return buffer_;
+    return head_;
 }
 
 const uint8_t *sockbuf::raw() const
@@ -68,7 +68,7 @@ const uint8_t *sockbuf::raw() const
 
 size_t sockbuf::raw_size() const
 {
-    return end_ - buffer_;
+    return end_ - head_;
 }
 
 void sockbuf::clear_payload()
@@ -78,7 +78,7 @@ void sockbuf::clear_payload()
 
 void sockbuf::clear_all()
 {
-    payload_ = buffer_;
+    payload_ = buffer_ + header_len_;
     end_ = payload_;
     head_ = payload_;
 }
