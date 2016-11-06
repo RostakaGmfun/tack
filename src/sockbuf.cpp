@@ -43,7 +43,7 @@ bool sockbuf::add_payload(const uint8_t *payload, size_t size)
 
 uint8_t *sockbuf::payload()
 {
-    return frag_;
+    return payload_;
 }
 
 const uint8_t *sockbuf::payload() const
@@ -53,7 +53,7 @@ const uint8_t *sockbuf::payload() const
 
 size_t sockbuf::payload_size() const
 {
-    return end_ - frag_;
+    return end_ - payload_;
 }
 
 uint8_t *sockbuf::raw()
@@ -81,7 +81,6 @@ void sockbuf::clear_all()
     payload_ = buffer_;
     end_ = payload_;
     head_ = payload_;
-    frag_ = payload_;
 }
 
 }

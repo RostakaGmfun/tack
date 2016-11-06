@@ -1,0 +1,19 @@
+language: cpp
+compiler: g++
+
+before_install:
+    - sudo add-apt-repository ppa:ubuntu-toolchain-r/test -y
+    - sudo add-apt-repository ppa:george-edison55/precise-backports -y
+    - sudo apt-get update -qq
+
+install:
+    - sudo apt-get install cmake cmake-data
+    - if [ "$CXX" = "g++" ]; then sudo apt-get install -qq g++-4.9; fi
+    - if [ "$CXX" = "g++" ]; then export CXX="g++-4.9" CC="gcc-4.9"; fi
+
+script:
+    - mkdir build
+    - cd build
+    - cmake -DBUILD_FOR_TRAVIS=ON ..
+    - make
+    - ./test/tack_test

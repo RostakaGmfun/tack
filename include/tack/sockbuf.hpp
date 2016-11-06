@@ -175,7 +175,6 @@ private:
     uint8_t *head_;
     uint8_t *payload_;
     uint8_t *end_;
-    uint8_t *frag_;
 };
 
 template <class HeaderType>

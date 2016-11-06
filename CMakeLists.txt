@@ -7,6 +7,8 @@ find_package(Doxygen)
 set(CMAKE_CXX_STANDARD 11)
 set(CMAKE_CXX_FLAGS "${CMAKE_CXX_FLAGS} -Wall -Werror -Wextra")
 
+option(BUILD_FOR_TRAVIS "Build for Travis-CI" OFF)
+
 include(Modules/Doxygen.cmake)
 
 set(TACK_SOURCES
@@ -22,6 +24,12 @@ target_include_directories(tack PUBLIC
     ${CMAKE_CURRENT_LIST_DIR}/include
     ${CMAKE_CURRENT_LIST_DIR}/Catch/single_include)
 target_link_libraries(tack pthread)
+
+# IFF_MULTI_QUEUE is not defined in linux kernel headers on travis-ci VM
+if (BUILD_FOR_TRAVIS)
+    message(STATUS "Building for Travis")
+    target_compile_definitions(tack PRIVATE -DIFF_MULTI_QUEUE=0)
+endif (BUILD_FOR_TRAVIS)
 
 add_executable(tackdev src/main.cpp)
 target_link_libraries(tackdev tack)
