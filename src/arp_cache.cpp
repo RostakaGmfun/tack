@@ -4,9 +4,10 @@
 
 using namespace tack;
 
-arp_cache::arp_cache(size_t cache_size):
+arp_cache::arp_cache(const uint8_t (&self)[6], size_t cache_size):
     cache_size_(cache_size)
 {
+    std::copy(self, self+6, &self_[0]);
     cache_.clear();
     cache_.reserve(cache_size_);
 }

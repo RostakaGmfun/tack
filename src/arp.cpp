@@ -6,7 +6,8 @@
 
 namespace tack {
 
-arp::arp(arp_cache_ptr cache): arp_cache_(cache)
+arp::arp(arp_cache_ptr cache):
+    arp_cache_(cache)
 {}
 
 void arp::process_packet(sockbuf &skb)
@@ -25,24 +26,15 @@ void arp::process_packet(sockbuf &skb)
         return;
     }
 
-    uint8_t *payload = skb.payload();
-    tack::hw_address sha, tha;
-    tack::ipv4_address spa, tpa;
-    std::copy(payload, payload+sizeof(sha), &sha[0]);
-    payload += sizeof(sha);
-    std::copy(payload, payload+sizeof(spa), &spa[0]);
-    payload += sizeof(spa);
-    std::copy(payload, payload+sizeof(sha), &tha[0]);
-    payload += sizeof(sha);
-    std::copy(payload, payload+sizeof(tpa), &tpa[0]);
-
     switch(tack::ntohs(hdr->op)) {
         case op_type::arp_request:
+            process_request(skb.payload());
         case op_type::arp_reply:
+            process_reply(skb.payload());
         break;
     }
 
-    std::cout << "sha: ";
+    /*std::cout << "sha: ";
     for (auto b : sha) {
         std::cout << std::hex << (int)b << ' ';
     }
@@ -62,7 +54,34 @@ void arp::process_packet(sockbuf &skb)
         std::cout << std::dec << (int)b << ' ';
     }
 
-    std::cout << '\n';
+    std::cout << '\n';*/
+}
+
+void arp::parse_payload(const uint8_t *payload,
+        hw_address &sha, hw_address &tha, ipv4_address &spa, ipv4_address &tpa)
+{
+    std::copy(payload, payload+sizeof(sha), &sha[0]);
+    payload += sizeof(sha);
+    std::copy(payload, payload+sizeof(spa), &spa[0]);
+    payload += sizeof(spa);
+    std::copy(payload, payload+sizeof(sha), &tha[0]);
+    payload += sizeof(sha);
+    std::copy(payload, payload+sizeof(tpa), &tpa[0]);
+}
+
+
+void arp::process_request(const uint8_t *payload)
+{
+    tack::hw_address sha, tha;
+    tack::ipv4_address spa, tpa;
+    parse_payload(payload, sha, tha, spa, tpa);
+}
+
+void arp::process_reply(const uint8_t *payload)
+{
+    tack::hw_address sha, tha;
+    tack::ipv4_address spa, tpa;
+    parse_payload(payload, sha, tha, spa, tpa);
 }
 
 }

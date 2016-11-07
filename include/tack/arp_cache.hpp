@@ -31,7 +31,7 @@ using ipv4_address = std::array<std::uint8_t, 4>;
 class arp_cache
 {
 public:
-    arp_cache(size_t size = 1024);
+    arp_cache(const uint8_t (&self)[6], size_t size = 1024);
     ~arp_cache() = default;
 
     /**
@@ -62,6 +62,7 @@ private:
     std::vector<arp_entry> cache_;
     std::mutex cache_mutex_;
     size_t cache_size_;
+    hw_address self_;
 };
 
 using arp_cache_ptr = std::shared_ptr<arp_cache>;

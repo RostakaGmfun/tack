@@ -64,7 +64,7 @@ private:
 
 ndev_pool::ndev_pool(const network_device &ndev):
     stop_(false),
-    arp_cache_(std::make_shared<arp_cache>())
+    arp_cache_(std::make_shared<arp_cache>(ndev.get_hwaddr()))
 {
     for (size_t i = 0;i<ndev.get_num_devices();i++) {
         threads_.push_back(

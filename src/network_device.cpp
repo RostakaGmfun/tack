@@ -39,6 +39,11 @@ network_device::network_device(std::string name,
         throw std::runtime_error("Failed to set device MTU");
     }
 
+    if (!get_if_addr()) {
+        cleanup();
+        throw std::runtime_error("Failed to retrieve hardware address");
+    }
+
 }
 
 network_device::~network_device()
@@ -79,6 +84,26 @@ bool network_device::set_mtu(size_t mtu)
     mtu_ = mtu;
 
     std::cout << "MTU set to " << mtu_ << std::endl;
+    return true;
+}
+
+bool network_device::get_if_addr()
+{
+    ifreq ifr;
+
+    strncpy(ifr.ifr_name, name_.c_str(), sizeof(ifr.ifr_name));
+
+    if (ioctl(sock_fd_, SIOCGIFHWADDR, (void *)&ifr) < 0) {
+        std::cerr << strerror(errno) << std::endl;
+        return false;
+    }
+
+    std::copy(ifr.ifr_hwaddr.sa_data, ifr.ifr_hwaddr.sa_data+6, hw_addr_);
+    std::cout << "Retrieved hardware address: ";
+    for (auto b : hw_addr_) {
+        std::cout << std::hex << (int)b << ' ';
+    }
+    std::cout << '\n';
     return true;
 }
 

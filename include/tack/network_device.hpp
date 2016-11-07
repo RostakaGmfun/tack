@@ -23,8 +23,11 @@ public:
 
     const std::string &get_name() const { return name_; }
 
+    uint8_t const (&get_hwaddr() const)[6] { return hw_addr_; }
+
 private:
     bool init_tap(size_t num_devices);
+    bool get_if_addr();
 
     void cleanup();
 
@@ -33,6 +36,8 @@ private:
     int sock_fd_;
     size_t mtu_;
     std::string name_;
+
+    uint8_t hw_addr_[6];
 };
 
 } // namespace tack

@@ -7,11 +7,9 @@
 
 #include "tack/ethernet.hpp"
 #include "tack/sockbuf.hpp"
+#include "tack/arp_cache.hpp"
 
 namespace tack {
-
-class arp_cache;
-using arp_cache_ptr = std::shared_ptr<arp_cache>;
 
 enum class hrd_type: uint16_t
 {
@@ -44,6 +42,12 @@ public:
     void process_packet(sockbuf &skb);
 
 private:
+    void process_request(const uint8_t *payload);
+    void process_reply(const uint8_t *payload);
+
+    void parse_payload(const uint8_t *payload, hw_address &sha,
+            hw_address &tha, ipv4_address &spa, ipv4_address &tpa);
+
     arp_cache_ptr arp_cache_;
 };
 
