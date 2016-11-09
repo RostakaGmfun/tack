@@ -36,6 +36,7 @@ public:
     sockbuf(const sockbuf &other) = delete;
     sockbuf(sockbuf &&rval) = delete;
     sockbuf &operator=(const sockbuf &other) = delete;
+    sockbuf &operator=(sockbuf &&other) = delete;
 
     ~sockbuf();
 

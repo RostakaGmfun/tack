@@ -47,7 +47,7 @@ public:
         if (r < 0) {
             return r;
         }
-        for(uint8_t *p = dest; p != dest+ r; p++) {
+        for(uint8_t *p = dest; p != dest + r; p++) {
             if (*p !=0) {
                 return std::copy(p, dest + r, dest) - dest;
             }

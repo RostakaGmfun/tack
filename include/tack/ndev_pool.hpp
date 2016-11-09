@@ -5,8 +5,11 @@
 #include <vector>
 #include <thread>
 #include <memory>
+#include <mutex>
+#include <queue>
 
 #include "tack/network_device.hpp"
+#include "tack/sockbuf.hpp"
 
 namespace tack
 {
@@ -27,10 +30,32 @@ public:
         return arp_cache_;
     }
 
+    using write_callback_t = std::function<void(int64_t)>;
+    using write_op_t = std::pair<tack::sockbuf, write_callback_t>;
+
+    /**
+     * Asynchronous write operation
+     *
+     * @param skb       Socket buffer to write.
+     * @param callback  Called after the write succeeds or fails.
+     *
+     * @note @c skb is moved out so data becomes invalid after this call.
+     * @note @c callback might be called from another thread.
+     */
+    void write(tack::sockbuf &&skb, write_callback_t callback);
+
+    /**
+     * Thread safe method to pick a task from write queue.
+     * Intended to be called by ndev_worker.
+     */
+    write_op_t &&pick_task();
+
 private:
     std::vector<std::thread> threads_;
     bool stop_;
     arp_cache_ptr arp_cache_;
+    std::queue<write_op_t> write_queue_;
+    std::mutex write_queue_mutex_;
 };
 
 } // namespace tack

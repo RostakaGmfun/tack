@@ -11,7 +11,7 @@
 #include <cstring>
 #include <iostream>
 
-using namespace tack;
+namespace tack {
 
 network_device::network_device(std::string name,
         size_t num_multiqueue_devices, size_t mtu):
@@ -134,3 +134,4 @@ bool network_device::init_tap(size_t num_devices)
     return true;
 }
 
+}
