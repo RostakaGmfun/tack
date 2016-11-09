@@ -98,12 +98,8 @@ bool network_device::get_if_addr()
         return false;
     }
 
-    std::copy(ifr.ifr_hwaddr.sa_data, ifr.ifr_hwaddr.sa_data+6, hw_addr_);
-    std::cout << "Retrieved hardware address: ";
-    for (auto b : hw_addr_) {
-        std::cout << std::hex << (int)b << ' ';
-    }
-    std::cout << '\n';
+    std::copy(ifr.ifr_hwaddr.sa_data, ifr.ifr_hwaddr.sa_data+6, &hw_addr_[0]);
+    std::cout << "Retrieved hardware address: " << hw_addr_ << '\n';
     return true;
 }
 

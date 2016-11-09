@@ -5,7 +5,8 @@
 #include <vector>
 #include <memory>
 #include <mutex>
-#include <array>
+
+#include "tack/addresses.hpp"
 
 namespace tack
 {
@@ -22,16 +23,13 @@ struct arp_result
     bool is_null;
 };
 
-using hw_address = std::array<std::uint8_t, 6>;
-using ipv4_address = std::array<std::uint8_t, 4>;
-
 /**
  * Thread-safe ARP cache implementation.
  */
 class arp_cache
 {
 public:
-    arp_cache(const uint8_t (&self)[6], size_t size = 1024);
+    arp_cache(const hw_address &self, size_t size = 1024);
     ~arp_cache() = default;
 
     /**
@@ -48,6 +46,14 @@ public:
      * Update the cache with address pair.
      */
     void update(const hw_address &hwaddr, const ipv4_address &ipaddr);
+
+    /**
+     * Retrieve current MAC.
+     */
+    const hw_address &get_self() const
+    {
+        return self_;
+    }
 
 private:
     struct arp_entry

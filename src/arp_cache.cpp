@@ -1,13 +1,13 @@
 #include "tack/arp_cache.hpp"
 
 #include <algorithm>
+#include <iostream>
 
 using namespace tack;
 
-arp_cache::arp_cache(const uint8_t (&self)[6], size_t cache_size):
-    cache_size_(cache_size)
+arp_cache::arp_cache(const hw_address &self, size_t cache_size):
+    cache_size_(cache_size), self_(self)
 {
-    std::copy(self, self+6, &self_[0]);
     cache_.clear();
     cache_.reserve(cache_size_);
 }
@@ -51,11 +51,14 @@ void arp_cache::update(const hw_address &hwaddr, const ipv4_address &ipaddr)
 
     if (entry != cache_.end()) {
         (*entry).ip_addr = ipaddr;
+        std::cout << "ARP cache entry updated\n";
+        return;
     }
 
     if (cache_.size() == cache_size_) {
         cache_.erase(cache_.begin());
     }
     cache_.push_back(arp_entry(hwaddr, ipaddr));
+    std::cout << "Added new arp cache entry\n";
 }
 

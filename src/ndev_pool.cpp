@@ -3,6 +3,7 @@
 #include <cstddef>
 #include <iostream>
 #include <vector>
+#include <memory>
 
 #include "tack/ndev_pool.hpp"
 #include "tack/network_device.hpp"
@@ -19,7 +20,7 @@ public:
     ndev_worker(const ndev_pool &pool,
             int fd, size_t mtu):
         pool_(pool), fd_(fd), mtu_(mtu),
-        ethernet_(mtu)
+        ethernet_(mtu, pool.arp_cache())
     {}
 
     void run()
@@ -64,17 +65,17 @@ private:
 
 ndev_pool::ndev_pool(const network_device &ndev):
     stop_(false),
-    arp_cache_(std::make_shared<arp_cache>(ndev.get_hwaddr()))
+    arp_cache_(new tack::arp_cache(ndev.get_hwaddr()))
 {
     for (size_t i = 0;i<ndev.get_num_devices();i++) {
-        threads_.push_back(
-                std::thread([this, &ndev, i] {
-                    int fd = ndev.get_device_fd(i);
-                    size_t mtu = ndev.get_mtu();
+        threads_.emplace_back(
+            std::thread([this, &ndev, i] {
+                int fd = ndev.get_device_fd(i);
+                size_t mtu = ndev.get_mtu();
 
-                    ndev_worker worker(*this, fd, mtu);
-                    worker.run();
-                }));
+                ndev_worker worker(*this, fd, mtu);
+                worker.run();
+            }));
     }
 }
 

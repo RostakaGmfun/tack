@@ -13,6 +13,9 @@ namespace tack
 class arp;
 using arp_ptr = std::shared_ptr<arp>;
 
+class arp_cache;
+using arp_cache_ptr = std::shared_ptr<arp_cache>;
+
 enum class ethertype: uint16_t {
     IPv4 = 0x800,
     IPv6 = 0x86DD,
@@ -27,7 +30,7 @@ struct ethernet_header {
 
 class ethernet {
 public:
-    ethernet(size_t mtu = 1500);
+    ethernet(size_t mtu, const arp_cache_ptr &arp_cache);
     ~ethernet() = default;
 
     void process_packet(sockbuf &sockbuf);

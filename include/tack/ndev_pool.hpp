@@ -22,6 +22,11 @@ public:
 
     bool is_stop() const;
 
+    arp_cache_ptr arp_cache() const
+    {
+        return arp_cache_;
+    }
+
 private:
     std::vector<std::thread> threads_;
     bool stop_;

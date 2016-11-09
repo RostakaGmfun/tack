@@ -8,8 +8,8 @@
 
 using namespace tack;
 
-ethernet::ethernet(size_t mtu):
-    mtu_(mtu)
+ethernet::ethernet(size_t mtu, const arp_cache_ptr &arp_cache):
+    mtu_(mtu), arp_(std::make_shared<arp>(arp_cache))
 {
     if (!mtu_) {
         throw std::invalid_argument("MTU can't be zero");

@@ -1,15 +1,18 @@
 #include "tack/arp.hpp"
-#include "tack/arp_cache.hpp"
 #include "tack/byte_utils.hpp"
+#include "tack/arp_cache.hpp"
 
 #include <iostream>
 
 namespace tack {
 
-arp::arp(arp_cache_ptr cache):
+arp::arp(const arp_cache_ptr &cache):
     arp_cache_(cache)
 {}
 
+/**
+ *  See RFC 826, section "Packet reception"
+ */
 void arp::process_packet(sockbuf &skb)
 {
     if (!skb.push_header<arp_header>()) {
@@ -26,35 +29,26 @@ void arp::process_packet(sockbuf &skb)
         return;
     }
 
+    tack::hw_address sha, tha;
+    tack::ipv4_address spa, tpa;
+    parse_payload(skb.payload(), sha, tha, spa, tpa);
     switch(tack::ntohs(hdr->op)) {
         case op_type::arp_request:
-            process_request(skb.payload());
+            send_reply(sha, spa);
+        // fallthrough is expected
         case op_type::arp_reply:
-            process_reply(skb.payload());
+            if (sha != arp_cache_->get_self()) {
+                arp_cache_->update(sha, spa);
+            }
         break;
+        default:
+            return;
     }
 
-    /*std::cout << "sha: ";
-    for (auto b : sha) {
-        std::cout << std::hex << (int)b << ' ';
-    }
-
-    std::cout << "\nspa: ";
-    for (auto b : spa) {
-        std::cout << std::dec << (int)b << ' ';
-    }
-
-    std::cout << "\ntha: ";
-    for (auto b : tha) {
-        std::cout << std::hex << (int)b << ' ';
-    }
-
-    std::cout << "\ntpa: ";
-    for (auto b : tpa) {
-        std::cout << std::dec << (int)b << ' ';
-    }
-
-    std::cout << '\n';*/
+    std::cout << "sha: "  << sha << '\n';
+    std::cout << "spa: "  << spa << '\n';
+    std::cout << "tha: "  << tha << '\n';
+    std::cout << "tpa: "  << tpa << '\n';
 }
 
 void arp::parse_payload(const uint8_t *payload,
@@ -69,20 +63,10 @@ void arp::parse_payload(const uint8_t *payload,
     std::copy(payload, payload+sizeof(tpa), &tpa[0]);
 }
 
-
-void arp::process_request(const uint8_t *payload)
+void arp::send_reply(const hw_address &sha, const ipv4_address &spa)
 {
-    tack::hw_address sha, tha;
-    tack::ipv4_address spa, tpa;
-    parse_payload(payload, sha, tha, spa, tpa);
-}
-
-void arp::process_reply(const uint8_t *payload)
-{
-    tack::hw_address sha, tha;
-    tack::ipv4_address spa, tpa;
-    parse_payload(payload, sha, tha, spa, tpa);
+    // TODO
+    std::cout << "Sending reply to " << sha << ' ' << spa << '\n';
 }
 
 }
-
