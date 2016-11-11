@@ -14,6 +14,48 @@ sockbuf::sockbuf(size_t size, size_t header_len):
     clear_all(header_len);
 }
 
+sockbuf::sockbuf(sockbuf &&other)
+{
+    delete [] buffer_;
+    buffer_ = other.buffer_;
+    size_ = other.size_;
+    header_len_ = other.header_len_;
+    head_ = other.head_;
+    headers_ = std::move(other.headers_);
+    payload_ = other.payload_;
+    end_ = other.end_;
+
+    other.buffer_ = nullptr;
+    other.size_ = 0;
+    other.header_len_ = 0;
+    other.head_ = nullptr;
+    other.headers_.clear();
+    other.payload_ = nullptr;
+    other.end_ = nullptr;
+}
+
+sockbuf &sockbuf::operator=(sockbuf &&other)
+{
+    delete [] buffer_;
+    buffer_ = other.buffer_;
+    size_ = other.size_;
+    header_len_ = other.header_len_;
+    head_ = other.head_;
+    headers_ = std::move(other.headers_);
+    payload_ = other.payload_;
+    end_ = other.end_;
+
+    other.buffer_ = nullptr;
+    other.size_ = 0;
+    other.header_len_ = 0;
+    other.head_ = nullptr;
+    other.headers_.clear();
+    other.payload_ = nullptr;
+    other.end_ = nullptr;
+
+    return *this;
+}
+
 sockbuf::~sockbuf()
 {
     if (buffer_) {

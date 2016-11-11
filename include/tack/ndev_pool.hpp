@@ -47,8 +47,14 @@ public:
     /**
      * Thread safe method to pick a task from write queue.
      * Intended to be called by ndev_worker.
+     *
+     * @param skb Reference to socket buffer to which the
+     *      buffer to be written should be moved.
+     * @param cb Callback to call after write operation.
+     *
+     * @return Operation validness.
      */
-    write_op_t &&pick_task();
+    bool pick_task(sockbuf &skb, write_callback_t &cb);
 
 private:
     std::vector<std::thread> threads_;

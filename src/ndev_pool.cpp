@@ -17,7 +17,7 @@ namespace tack
 class ndev_worker
 {
 public:
-    ndev_worker(const ndev_pool &pool,
+    ndev_worker(ndev_pool &pool,
             int fd, size_t mtu):
         pool_(pool), fd_(fd), mtu_(mtu),
         ethernet_(mtu, pool.arp_cache())
@@ -26,10 +26,20 @@ public:
     void run()
     {
         // TODO: sockbuf size configuration instead of meaningless values
-        sockbuf skb(mtu_, 256);
+        sockbuf skb_in(mtu_, 256);
+        sockbuf skb_out(1, 0);
+
+        ndev_pool::write_callback_t write_cb;
         while (!pool_.is_stop()) {
-            if (skb.read(*this) > 0) {
-                ethernet_.process_packet(skb);
+            if (skb_in.read(*this) > 0) {
+                ethernet_.process_packet(skb_in);
+            }
+
+            if (pool_.pick_task(skb_out, write_cb)) {
+                int64_t ret = skb_in.write(*this);
+                if (write_cb) {
+                    write_cb(ret);
+                }
             }
         }
     }
@@ -55,9 +65,15 @@ public:
         return -1;
     }
 
+    int64_t write(const uint8_t *src, size_t size)
+    {
+        // TODO: think about fragmentation for frames bigger than MTU
+        return ::write(fd_, src, size);
+    }
+
 
 private:
-    const ndev_pool &pool_;
+    ndev_pool &pool_;
     int fd_;
     size_t mtu_;
     ethernet ethernet_;
@@ -79,11 +95,6 @@ ndev_pool::ndev_pool(const network_device &ndev):
     }
 }
 
-bool ndev_pool::is_stop() const
-{
-    return stop_;
-}
-
 ndev_pool::~ndev_pool()
 {
     stop_ = true;
@@ -92,6 +103,30 @@ ndev_pool::~ndev_pool()
             thread.join();
         }
     }
+}
+
+bool ndev_pool::is_stop() const
+{
+    return stop_;
+}
+
+void ndev_pool::write(tack::sockbuf &&skb, write_callback_t callback)
+{
+    std::lock_guard<std::mutex> lock(write_queue_mutex_);
+    write_queue_.push(std::make_pair(std::move(skb), std::move(callback)));
+}
+
+bool ndev_pool::pick_task(sockbuf &skb, write_callback_t &cb)
+{
+    std::lock_guard<std::mutex> lock(write_queue_mutex_);
+    if (write_queue_.empty()) {
+        return false;
+    }
+
+    skb = std::move(write_queue_.front().first);
+    cb = std::move(write_queue_.front().second);
+    write_queue_.pop();
+    return true;
 }
 
 } // namespace tack

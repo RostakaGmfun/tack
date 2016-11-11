@@ -32,11 +32,12 @@ public:
      */
     sockbuf(size_t size, size_t header_len);
 
+    sockbuf(sockbuf &&other);
+    sockbuf &operator=(sockbuf &&other);
+
     // TODO: consider implementing these
     sockbuf(const sockbuf &other) = delete;
-    sockbuf(sockbuf &&rval) = delete;
     sockbuf &operator=(const sockbuf &other) = delete;
-    sockbuf &operator=(sockbuf &&other) = delete;
 
     ~sockbuf();
 
