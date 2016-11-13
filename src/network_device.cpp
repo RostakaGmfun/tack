@@ -6,10 +6,12 @@
 #include <sys/ioctl.h>
 #include <linux/if.h>
 #include <linux/if_tun.h>
+#include <netinet/in.h>
 
 #include <stdexcept>
 #include <cstring>
 #include <iostream>
+#include <mutex>
 
 namespace tack {
 
@@ -101,6 +103,32 @@ bool network_device::get_if_addr()
     std::copy(ifr.ifr_hwaddr.sa_data, ifr.ifr_hwaddr.sa_data+6, &hw_addr_[0]);
     std::cout << "Retrieved hardware address: " << hw_addr_ << '\n';
     return true;
+}
+
+ipv4_address network_device::get_ipaddr() const
+{
+    static std::mutex mx;
+    std::lock_guard<std::mutex> lock(mx);
+    static ipv4_address addr;
+    static bool retrieved = false;
+    if (!retrieved) {
+        ifreq ifr;
+
+        strncpy(ifr.ifr_name, name_.c_str(), sizeof(ifr.ifr_name));
+
+        if (ioctl(sock_fd_, SIOCGIFADDR, (void *)&ifr) < 0) {
+            std::cerr << strerror(errno) << std::endl;
+            return ipv4_address{0, 0, 0, 0};
+        }
+
+        sockaddr_in *sin = reinterpret_cast<sockaddr_in*>(&ifr.ifr_addr);
+        uint8_t *saddr = reinterpret_cast<uint8_t*>(&sin->sin_addr);
+        std::copy(saddr, saddr+4, &addr[0]);
+        std::cout << "Retrieved IPv4 address: " << addr << '\n';
+        retrieved = true;
+    }
+
+    return addr;
 }
 
 bool network_device::init_tap(size_t num_devices)

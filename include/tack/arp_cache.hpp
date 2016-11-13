@@ -5,6 +5,7 @@
 #include <vector>
 #include <memory>
 #include <mutex>
+#include <utility>
 
 #include "tack/addresses.hpp"
 
@@ -29,7 +30,7 @@ struct arp_result
 class arp_cache
 {
 public:
-    arp_cache(const hw_address &self, size_t size = 1024);
+    arp_cache(size_t size = 1024);
     ~arp_cache() = default;
 
     /**
@@ -47,28 +48,13 @@ public:
      */
     void update(const hw_address &hwaddr, const ipv4_address &ipaddr);
 
-    /**
-     * Retrieve current MAC.
-     */
-    const hw_address &get_self() const
-    {
-        return self_;
-    }
-
 private:
-    struct arp_entry
-    {
-        arp_entry(hw_address hw, ipv4_address ip):
-            hw_addr(hw), ip_addr(ip)
-        {}
-        hw_address hw_addr;
-        ipv4_address ip_addr;
-    };
+
+    using arp_entry = std::pair<hw_address, ipv4_address>;
 
     std::vector<arp_entry> cache_;
     std::mutex cache_mutex_;
     size_t cache_size_;
-    hw_address self_;
 };
 
 using arp_cache_ptr = std::shared_ptr<arp_cache>;

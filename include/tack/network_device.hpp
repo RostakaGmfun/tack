@@ -25,7 +25,8 @@ public:
 
     const std::string &get_name() const { return name_; }
 
-    const hw_address &get_hwaddr() const { return hw_addr_; }
+    hw_address get_hwaddr() const { return hw_addr_; }
+    ipv4_address get_ipaddr() const;
 
 private:
     bool init_tap(size_t num_devices);

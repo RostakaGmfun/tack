@@ -5,7 +5,8 @@
 #include <cstddef>
 #include <memory>
 
-#include  "tack/sockbuf.hpp"
+#include "tack/sockbuf.hpp"
+#include "tack/addresses.hpp"
 
 namespace tack
 {
@@ -15,6 +16,8 @@ using arp_ptr = std::shared_ptr<arp>;
 
 class arp_cache;
 using arp_cache_ptr = std::shared_ptr<arp_cache>;
+
+class ndev_worker;
 
 enum class ethertype: uint16_t {
     IPv4 = 0x800,
@@ -30,14 +33,14 @@ struct ethernet_header {
 
 class ethernet {
 public:
-    ethernet(size_t mtu, const arp_cache_ptr &arp_cache);
+    ethernet(ndev_worker *worker);
     ~ethernet() = default;
 
     void process_packet(sockbuf &sockbuf);
+    void transfer_packet(sockbuf &sockbuf, const hw_address &dest);
 
 private:
-    size_t mtu_;
-    arp_ptr arp_;
+    ndev_worker *worker_;
 };
 
 } // namespace tack

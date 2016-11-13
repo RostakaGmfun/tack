@@ -4,7 +4,7 @@ project(tack LANGUAGES CXX)
 
 find_package(Doxygen)
 
-set(CMAKE_CXX_STANDARD 11)
+set(CMAKE_CXX_STANDARD 14)
 set(CMAKE_CXX_FLAGS "${CMAKE_CXX_FLAGS} -Wall -Werror -Wextra")
 
 option(BUILD_FOR_TRAVIS "Build for Travis-CI" OFF)
@@ -14,6 +14,7 @@ include(Modules/Doxygen.cmake)
 set(TACK_SOURCES
     src/network_device.cpp
     src/ndev_pool.cpp
+    src/ndev_worker.cpp
     src/ethernet.cpp
     src/arp.cpp
     src/arp_cache.cpp
@@ -31,7 +32,5 @@ if (BUILD_FOR_TRAVIS)
     target_compile_definitions(tack PRIVATE -DIFF_MULTI_QUEUE=0)
 endif (BUILD_FOR_TRAVIS)
 
-add_executable(tackdev src/main.cpp)
-target_link_libraries(tackdev tack)
-
 add_subdirectory(test)
+add_subdirectory(examples)

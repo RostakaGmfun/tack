@@ -2,17 +2,17 @@
 #include "tack/arp.hpp"
 #include "tack/arp_cache.hpp"
 #include "tack/byte_utils.hpp"
+#include "tack/ndev_worker.hpp"
 
 #include <iostream>
 #include <stdexcept>
 
 using namespace tack;
 
-ethernet::ethernet(size_t mtu, const arp_cache_ptr &arp_cache):
-    mtu_(mtu), arp_(std::make_shared<arp>(arp_cache))
+ethernet::ethernet(ndev_worker *worker): worker_(worker)
 {
-    if (!mtu_) {
-        throw std::invalid_argument("MTU can't be zero");
+    if (!worker_) {
+        throw std::invalid_argument("Worker is nullptr");
     }
 }
 
@@ -23,30 +23,23 @@ void ethernet::process_packet(sockbuf &skb)
     }
     const ethernet_header *hdr = skb.get_header<ethernet_header>();
 
-    /*std::cout << "src: ";
-    for (auto b : hdr->src) {
-        std::cerr  << std::hex << (int)b << ' ';
-    }
-    std::cout << "\ndst: ";
-    for (auto b : hdr->dest) {
-        std::cerr << std::hex << (int)b << ' ';
-    }
-
-    std::cout << '\n';*/
-
     switch (tack::ntohs(hdr->type)) {
         case ethertype::IPv4:
             // TODO
-            //std::cout << "IPv4" << std::endl;
         break;
         case ethertype::IPv6:
             // TODO
-            //std::cout << "IPv6" << std::endl;
         break;
         case ethertype::ARP:
-            arp_->process_packet(skb);
+            worker_->get_layer<arp>().process_packet(skb);
         break;
         default:
             std::cerr << std::hex << static_cast<uint16_t>(tack::ntohs((hdr->type))) << std::endl;
     }
+}
+
+void ethernet::transfer_packet(sockbuf &sockbuf, const hw_address &dest)
+{
+    static_cast<void>(sockbuf);
+    static_cast<void>(dest);
 }

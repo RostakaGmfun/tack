@@ -14,6 +14,8 @@ namespace tack {
 class arp_cache;
 using arp_cache_ptr = std::shared_ptr<arp_cache>;
 
+class ndev_worker;
+
 enum class hrd_type: uint16_t
 {
     ethernet = 1,
@@ -39,7 +41,7 @@ struct arp_header
 class arp
 {
 public:
-    arp(const arp_cache_ptr &cache);
+    arp(ndev_worker *worker);
     ~arp() = default;
 
     void process_packet(sockbuf &skb);
@@ -49,7 +51,7 @@ private:
     void parse_payload(const uint8_t *payload, hw_address &sha,
             hw_address &tha, ipv4_address &spa, ipv4_address &tpa);
 
-    arp_cache_ptr arp_cache_;
+    ndev_worker *worker_;
 };
 
 }

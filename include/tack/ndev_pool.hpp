@@ -56,12 +56,18 @@ public:
      */
     bool pick_task(sockbuf &skb, write_callback_t &cb);
 
+    const network_device &get_device() const
+    {
+        return device_;
+    }
+
 private:
     std::vector<std::thread> threads_;
     bool stop_;
     arp_cache_ptr arp_cache_;
     std::queue<write_op_t> write_queue_;
     std::mutex write_queue_mutex_;
+    const network_device &device_;
 };
 
 } // namespace tack
