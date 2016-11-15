@@ -27,7 +27,7 @@ void arp::process_packet(sockbuf &skb)
     if (tack::ntohs(hdr->hrd) != hrd_type::ethernet || hdr->hln != 6) {
         return;
     }
-    if (tack::ntohs(hdr->pro) != pro_type::IPv4 || hdr->pln != 4) {
+    if (tack::ntohs(hdr->pro) != pro_type::ipv4 || hdr->pln != 4) {
         return;
     }
 
@@ -38,7 +38,7 @@ void arp::process_packet(sockbuf &skb)
     parse_payload(skb.payload(), sha, tha, spa, tpa);
     switch(tack::ntohs(hdr->op)) {
         case op_type::arp_request:
-            send_reply(sha, spa);
+            send_reply(sha, spa, tpa);
         // fallthrough is expected
         case op_type::arp_reply:
             if (sha != device.get_hwaddr()) {
@@ -67,27 +67,31 @@ void arp::parse_payload(const uint8_t *payload,
     std::copy(payload, payload+sizeof(tpa), &tpa[0]);
 }
 
-void arp::send_reply(const hw_address &tha, const ipv4_address &tpa)
+void arp::send_reply(const hw_address &tha, const ipv4_address &tpa, const ipv4_address &spa)
 {
     static constexpr auto payload_len = (sizeof(hw_address) + sizeof(ipv4_address))*2;
     static constexpr auto header_len = sizeof(ethernet_header) + sizeof(arp_header);
     static sockbuf reply(header_len + payload_len, header_len);
 
-    std::cout << "Sending reply to " << tpa << " @ " << tha << '\n';
+    auto &arp_cache = *worker_->get_pool().arp_cache();
+    auto sha = arp_cache[spa];
+    if (sha.is_null) {
+        return;
+    }
 
-    auto arp_cache = worker_->get_pool().arp_cache();
-    auto sha = worker_->get_pool().get_device().get_hwaddr();
-    auto spa = worker_->get_pool().get_device().get_ipaddr();
+    std::cout << "Sending reply to " << tpa << " @ " << tha << '\n';
+    std::cout << "From " << spa << " @ " << sha.value << '\n';
+
     arp_header hdr;
 
-    hdr.hrd = hrd_type::ethernet;
-    hdr.pro = pro_type::IPv4;
-    hdr.hln = sizeof(hw_address);
-    hdr.pln = sizeof(ipv4_address);
-    hdr.op = op_type::arp_reply;
+    hdr.hrd = tack::htons(hrd_type::ethernet);
+    hdr.pro = tack::htons(pro_type::ipv4);
+    hdr.hln = static_cast<uint8_t>(sizeof(hw_address));
+    hdr.pln = static_cast<uint8_t>(sizeof(ipv4_address));
+    hdr.op = tack::htons(op_type::arp_reply);
 
     reply.clear_all(header_len);
-    reply.add_payload(sha.data(), sizeof(hw_address));
+    reply.add_payload(sha.value.data(), sizeof(hw_address));
     reply.add_payload(spa.data(), sizeof(ipv4_address));
     reply.add_payload(tha.data(), sizeof(hw_address));
     reply.add_payload(tpa.data(), sizeof(ipv4_address));

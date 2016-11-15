@@ -1,6 +1,7 @@
 #include "tack/ndev_worker.hpp"
 
 #include <unistd.h>
+#include <iostream>
 
 namespace tack
 {

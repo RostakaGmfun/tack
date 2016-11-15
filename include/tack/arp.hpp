@@ -47,7 +47,7 @@ public:
     void process_packet(sockbuf &skb);
 
 private:
-    void send_reply(const hw_address &sha, const ipv4_address &spa);
+    void send_reply(const hw_address &tha, const ipv4_address &tpa, const ipv4_address &spa);
     void parse_payload(const uint8_t *payload, hw_address &sha,
             hw_address &tha, ipv4_address &spa, ipv4_address &tpa);
 

@@ -21,6 +21,8 @@ int main()
     try {
         tack::network_device ndev("tack0", num_threads > 1 ? num_threads-1 : 1);
         tack::ndev_pool pool(ndev);
+        auto arp_cache = pool.arp_cache();
+        arp_cache->update(ndev.get_hwaddr(), {20, 0, 0, 1});
         while (true) {}
     } catch (std::runtime_error &e) {
         std::cout << e.what() << std::endl;

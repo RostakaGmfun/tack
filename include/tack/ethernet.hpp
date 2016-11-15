@@ -20,14 +20,14 @@ using arp_cache_ptr = std::shared_ptr<arp_cache>;
 class ndev_worker;
 
 enum class ethertype: uint16_t {
-    IPv4 = 0x800,
-    IPv6 = 0x86DD,
-    ARP = 0x806
+    ipv4 = 0x800,
+    ipv6 = 0x86DD,
+    arp = 0x806
 };
 
 struct ethernet_header {
-    uint8_t dest[6];
-    uint8_t src[6];
+    hw_address dest;
+    hw_address src;
     ethertype type;
 } __attribute__((packed));
 
