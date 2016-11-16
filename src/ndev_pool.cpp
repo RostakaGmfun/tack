@@ -32,9 +32,7 @@ ndev_pool::~ndev_pool()
 {
     stop_ = true;
     for (auto &thread : threads_) {
-        if (thread.joinable()) {
-            thread.join();
-        }
+        thread.detach();
     }
 }
 

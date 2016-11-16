@@ -136,7 +136,7 @@ bool network_device::init_tap(size_t num_devices)
     ifreq ifr;
 
     strncpy(ifr.ifr_name, name_.c_str(), sizeof(ifr.ifr_name));
-    ifr.ifr_flags |= IFF_TAP | IFF_NO_PI | IFF_MULTI_QUEUE;
+    ifr.ifr_flags = IFF_TAP | IFF_NO_PI | IFF_MULTI_QUEUE;
 
     for (size_t i = 0;i<num_devices; i++) {
         int fd = open("/dev/net/tun", O_RDWR);

@@ -39,19 +39,7 @@ int64_t ndev_worker::read(uint8_t *dest, size_t max_size)
         return -1;
     }
 
-    // Sometimes Ethernet frames are prepended with bunch bytes equal to zero.
-    // Currently I don't get why this happens,
-    // but this li'l hack make things happen the way I like them
-    ssize_t r = ::read(fd_, dest, mtu_);
-    if (r < 0) {
-        return r;
-    }
-    for(uint8_t *p = dest; p != dest + r; p++) {
-        if (*p !=0) {
-            return std::copy(p, dest + r, dest) - dest;
-        }
-    }
-    return -1;
+    return ::read(fd_, dest, mtu_);
 }
 
 int64_t ndev_worker::write(const uint8_t *src, size_t size)

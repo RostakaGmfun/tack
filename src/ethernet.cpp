@@ -45,12 +45,5 @@ void ethernet::transfer_packet(sockbuf &skb, const hw_address &dest)
     hdr.src = worker_->get_pool().get_device().get_hwaddr();
     hdr.type = tack::htons(ethertype::arp);
     skb.wrap(&hdr);
-    uint8_t *raw= skb.raw();
-    for (size_t i = 0; i < skb.raw_size(); i++) {
-        if (i % 8 == 0) {
-            std::cout << '\n';
-        }
-        std::cout << std::hex << (int)raw[i] << ' ';
-    }
     skb.write(*worker_);
 }

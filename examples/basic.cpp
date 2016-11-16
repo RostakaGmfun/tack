@@ -6,12 +6,14 @@
 #include <cstdlib>
 #include <thread>
 #include <iostream>
+#include <atomic>
+
+std::atomic_bool is_exit{false};
 
 void sigint_handler(int sig)
 {
     static_cast<void>(sig);
-    // This should flush and close all opened fds
-    exit(0);
+    is_exit = true;
 }
 
 int main()
@@ -23,7 +25,7 @@ int main()
         tack::ndev_pool pool(ndev);
         auto arp_cache = pool.arp_cache();
         arp_cache->update(ndev.get_hwaddr(), {20, 0, 0, 1});
-        while (true) {}
+        while (!is_exit);
     } catch (std::runtime_error &e) {
         std::cout << e.what() << std::endl;
         return 1;

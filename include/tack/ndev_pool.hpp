@@ -7,6 +7,7 @@
 #include <memory>
 #include <mutex>
 #include <queue>
+#include <atomic>
 
 #include "tack/network_device.hpp"
 #include "tack/sockbuf.hpp"
@@ -63,7 +64,7 @@ public:
 
 private:
     std::vector<std::thread> threads_;
-    bool stop_;
+    std::atomic_bool stop_;
     arp_cache_ptr arp_cache_;
     std::queue<write_op_t> write_queue_;
     std::mutex write_queue_mutex_;
