@@ -11,7 +11,9 @@ namespace tack {
 
 /**
  * Socket buffer implementation.
- *
+ */
+
+/*
  * Internal structure:
  *
  * buffer_          +-------------------+
