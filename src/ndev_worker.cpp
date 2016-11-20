@@ -9,7 +9,7 @@ namespace tack
 ndev_worker::ndev_worker(ndev_pool &pool,
         int fd, size_t mtu):
     pool_(pool), fd_(fd), mtu_(mtu),
-    layers_(tack::ethernet(this), tack::arp(this))
+    layers_(tack::ethernet(this), tack::arp(this), tack::ipv4(this))
 {}
 
 void ndev_worker::run()

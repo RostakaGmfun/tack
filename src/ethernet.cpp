@@ -25,7 +25,7 @@ void ethernet::process_packet(sockbuf &skb)
 
     switch (tack::ntohs(hdr->type)) {
         case ethertype::ipv4:
-            // TODO
+            worker_->get_layer<ipv4>().process_packet(skb);
         break;
         case ethertype::ipv6:
             // TODO

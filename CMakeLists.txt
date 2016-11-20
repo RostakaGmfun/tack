@@ -18,7 +18,8 @@ set(TACK_SOURCES
     src/ethernet.cpp
     src/arp.cpp
     src/arp_cache.cpp
-    src/sockbuf.cpp)
+    src/sockbuf.cpp
+    src/ipv4.cpp)
 
 add_library(tack ${TACK_SOURCES})
 target_include_directories(tack PUBLIC

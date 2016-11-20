@@ -5,6 +5,7 @@
 
 #include "tack/ndev_pool.hpp"
 #include "tack/ethernet.hpp"
+#include "tack/ipv4.hpp"
 #include "tack/arp.hpp"
 
 namespace tack
@@ -36,7 +37,7 @@ private:
     ndev_pool &pool_;
     int fd_;
     size_t mtu_;
-    std::tuple<ethernet, arp> layers_;
+    std::tuple<ethernet, arp, ipv4> layers_;
 };
 
 
