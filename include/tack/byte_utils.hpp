@@ -15,7 +15,7 @@ inline typename std::enable_if<(sizeof(E) == 2), E>::type ntohs(const E &e)
 template <typename E>
 inline typename std::enable_if<(sizeof(E) == 4), E>::type ntohl(const E &e)
 {
-    return static_cast<E>(::ntohl(static_cast<uint16_t>(e)));
+    return static_cast<E>(::ntohl(static_cast<uint32_t>(e)));
 }
 
 template <typename E>
@@ -27,7 +27,7 @@ inline typename std::enable_if<(sizeof(E) == 2), E>::type htons(const E &e)
 template <typename E>
 inline typename std::enable_if<(sizeof(E) == 4), E>::type htonl(const E &e)
 {
-    return static_cast<E>(::htonl(static_cast<uint16_t>(e)));
+    return static_cast<E>(::htonl(static_cast<uint32_t>(e)));
 }
 
 }
